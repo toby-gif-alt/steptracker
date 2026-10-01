@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#fff8dc" />
+  <title>Step Tracker 🥚</title>
+  <style>
+    :root {
+      --bg: #fff8dc;
+      --card: #ffffff;
+      --ink: #27221b;
+      --muted: #756a5c;
+      --accent: #f3b43f;
+      --accent-dark: #cf8514;
+      --track: #eee4cf;
+      --shadow: 0 14px 35px rgba(79, 57, 23, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, BlinkMacSystemFont,
+                   "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    body {
+      padding:
+        max(18px, env(safe-area-inset-top))
+        16px
+        max(28px, env(safe-area-inset-bottom));
+    }
+
+    .app {
+      width: min(100%, 520px);
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: clamp(1.7rem, 6vw, 2.35rem);
+      margin: 0;
+      line-height: 1;
+    }
+
+    .today {
+      color: var(--muted);
+      font-size: .9rem;
+      text-align: right;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .profile {
+      display: grid;
+      grid-template-columns: 96px 1fr;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .photo-wrap {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: #f5ecd9;
+      border: 4px solid #fff1b8;
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+
+    .photo-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    .photo-placeholder {
+      font-size: 2.7rem;
+      user-select: none;
+    }
+
+    .steps-label {
+      color: var(--muted);
+      font-size: .9rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .steps {
+      font-size: clamp(2.7rem, 13vw, 4.4rem);
+      line-height: .95;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      margin: 4px 0 7px;
+    }
+
+    .goal-row {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: .9rem;
+      margin-top: 8px;
+    }
+
+    .progress {
+      height: 14px;
+      background: var(--track);
+      overflow: hidden;
+      border-radius: 999px;
+      margin-top: 10px;
+    }
+
+    .progress > div {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ffd55c, var(--accent));
+      border-radius: inherit;
+      transition: width .25s ease;
+    }
+
+    .egg-card-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .egg-card-title h2 {
+      margin: 0;
+      font-size: 1.15rem;
+    }
+
+    .egg-count {
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    .egg-cloud {
+      min-height: 150px;
+      max-height: 310px;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      border-radius: 20px;
+      padding: 12px;
+      background: #fffaf0;
+      border: 1px solid #f1e6cf;
+      font-size: 18px;
+      line-height: 1.05;
+      word-break: break-all;
+      scrollbar-width: thin;
+    }
+
+    .empty-eggs {
+      color: #a49682;
+      font-size: 1rem;
+      line-height: 1.5;
+      display: grid;
+      place-items: center;
+      min-height: 125px;
+      text-align: center;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button, .camera-label {
+      appearance: none;
+      border: 0;
+      border-radius: 16px;
+      min-height: 48px;
+      padding: 12px 14px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+      display: grid;
+      place-items: center;
+      text-decoration: none;
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #2d200d;
+    }
+
+    .primary:active { background: var(--accent-dark); color: #fff; }
+
+    .secondary {
+      background: #f4efe5;
+      color: var(--ink);
+    }
+
+    .danger {
+      background: #fff0ef;
+      color: #a22f2a;
+    }
+
+    .status {
+      margin: 12px 2px 0;
+      color: var(--muted);
+      text-align: center;
+      font-size: .9rem;
+      line-height: 1.4;
+      min-height: 2.6em;
+    }
+
+    .hint {
+      text-align: center;
+      color: var(--muted);
+      font-size: .82rem;
+      line-height: 1.45;
+      padding: 0 10px 4px;
+    }
+
+    #photoInput { display: none; }
+
+    .celebrate {
+      animation: pop .25s ease;
+    }
+
+    @keyframes pop {
+      50% { transform: scale(1.045); }
+    }
+
+    @media (max-width: 370px) {
+      .profile {
+        grid-template-columns: 80px 1fr;
+      }
+      .photo-wrap {
+        width: 80px;
+        height: 80px;
+      }
+      .buttons { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <header>
+      <h1>Step Tracker 🥚</h1>
+      <div class="today" id="today"></div>
+    </header>
+
+    <section class="card">
+      <div class="profile">
+        <label class="photo-wrap" for="photoInput" aria-label="Take or choose profile photo">
+          <img id="profilePhoto" alt="Your profile photo" />
+          <span class="photo-placeholder" id="photoPlaceholder">📷</span>
+        </label>
+
+        <div>
+          <div class="steps-label">Today's eggs</div>
+          <div class="steps" id="stepCount">0</div>
+          <div>🥚 1 step = 1 egg</div>
+        </div>
+      </div>
+
+      <div class="progress" aria-label="Progress to 10,000 steps">
+        <div id="progressBar"></div>
+      </div>
+      <div class="goal-row">
+        <span id="percentText">0%</span>
+        <span>Goal: 10,000 🥚</span>
+      </div>
+
+      <input id="photoInput" type="file" accept="image/*" capture="user" />
+
+      <div class="buttons">
+        <label for="photoInput" class="camera-label secondary">📸 Take photo</label>
+        <button id="startButton" class="primary">▶ Start tracking</button>
+      </div>
+
+      <p class="status" id="status">
+        Tap “Start tracking”, then walk with your phone.
+      </p>
+    </section>
+
+    <section class="card">
+      <div class="egg-card-title">
+        <h2>Your egg profile</h2>
+        <span class="egg-count" id="eggCountLabel">0 eggs</span>
+      </div>
+
+      <div class="egg-cloud" id="eggCloud" aria-live="polite">
+        <div class="empty-eggs" id="emptyEggs">
+          Your eggs will hatch into existence here as you walk. 🐣
+        </div>
+      </div>
+
+      <div class="buttons">
+        <button id="testButton" class="secondary">+1 test step</button>
+        <button id="resetButton" class="danger">Reset today</button>
+      </div>
+    </section>
+
+    <p class="hint">
+      This first version saves your photo and today's count on this phone.
+      For reliable step tracking, keep the page/app open while walking.
+    </p>
+  </main>
+
+  <script>
+    (() => {
+      const GOAL = 10000;
+      const STORAGE_KEY = "eggStepTracker.v1";
+
+      const els = {
+        today: document.getElementById("today"),
+        stepCount: document.getElementById("stepCount"),
+        progressBar: document.getElementById("progressBar"),
+        percentText: document.getElementById("percentText"),
+        eggCountLabel: document.getElementById("eggCountLabel"),
+        eggCloud: document.getElementById("eggCloud"),
+        emptyEggs: document.getElementById("emptyEggs"),
+        profilePhoto: document.getElementById("profilePhoto"),
+        photoPlaceholder: document.getElementById("photoPlaceholder"),
+        photoInput: document.getElementById("photoInput"),
+        startButton: document.getElementById("startButton"),
+        testButton: document.getElementById("testButton"),
+        resetButton: document.getElementById("resetButton"),
+        status: document.getElementById("status")
+      };
+
+      const eggTextNode = document.createTextNode("");
+
+      function dateKey() {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      }
+
+      function prettyDate() {
+        return new Intl.DateTimeFormat(undefined, {
+          weekday: "short",
+          day: "numeric",
+          month: "short"
+        }).format(new Date());
+      }
+
+      function defaultState() {
+        return {
+          date: dateKey(),
+          steps: 0,
+          photo: ""
+        };
+      }
+
+      function loadState() {
+        let saved;
+        try {
+          saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+        } catch {
+          saved = null;
+        }
+
+        const state = saved && typeof saved === "object" ? saved : defaultState();
+
+        // 10,000 is a daily goal, so begin a fresh counter on a new day.
+        if (state.date !== dateKey()) {
+          state.date = dateKey();
+          state.steps = 0;
+        }
+
+        state.steps = Math.max(0, Math.min(GOAL, Number(state.steps) || 0));
+        return state;
+      }
+
+      let state = loadState();
+      let tracking = false;
+
+      // Simple motion-based peak detector.
+      // Tuned as a prototype, not a medical/fitness-grade pedometer.
+      let gravity = 9.81;
+      let smoothed = 0;
+      let lastStepAt = 0;
+      let aboveThreshold = false;
+      const STEP_THRESHOLD = 1.15;
+      const MIN_STEP_INTERVAL = 280;
+
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (err) {
+          console.warn("Could not save state:", err);
+        }
+      }
+
+      function setStatus(message) {
+        els.status.textContent = message;
+      }
+
+      function renderPhoto() {
+        if (state.photo) {
+          els.profilePhoto.src = state.photo;
+          els.profilePhoto.style.display = "block";
+          els.photoPlaceholder.style.display = "none";
+        } else {
+          els.profilePhoto.removeAttribute("src");
+          els.profilePhoto.style.display = "none";
+          els.photoPlaceholder.style.display = "inline";
+        }
+      }
+
+      function ensureEggNode() {
+        if (!els.eggCloud.contains(eggTextNode)) {
+          els.eggCloud.textContent = "";
+          els.eggCloud.appendChild(eggTextNode);
+        }
+      }
+
+      function renderEggsFull() {
+        if (state.steps === 0) {
+          els.eggCloud.innerHTML =
+            '<div class="empty-eggs" id="emptyEggs">Your eggs will hatch into existence here as you walk. 🐣</div>';
+          return;
+        }
+
+        ensureEggNode();
+        eggTextNode.data = "🥚".repeat(state.steps);
+      }
+
+      function renderCounters() {
+        const pct = Math.min(100, (state.steps / GOAL) * 100);
+        els.stepCount.textContent = state.steps.toLocaleString();
+        els.eggCountLabel.textContent =
+          `${state.steps.toLocaleString()} ${state.steps === 1 ? "egg" : "eggs"}`;
+        els.progressBar.style.width = `${pct}%`;
+        els.percentText.textContent = `${Math.floor(pct)}%`;
+      }
+
+      function addStep(count = 1) {
+        if (state.steps >= GOAL) return;
+
+        const before = state.steps;
+        state.steps = Math.min(GOAL, state.steps + count);
+
+        renderCounters();
+
+        if (before === 0) {
+          renderEggsFull();
+        } else {
+          ensureEggNode();
+          eggTextNode.appendData("🥚".repeat(state.steps - before));
+        }
+
+        saveState();
+
+        els.stepCount.classList.remove("celebrate");
+        void els.stepCount.offsetWidth;
+        els.stepCount.classList.add("celebrate");
+
+        if (state.steps === GOAL) {
+          setStatus("🎉 10,000 eggs! Goal complete!");
+          if (navigator.vibrate) navigator.vibrate([80, 60, 120]);
+        }
+      }
+
+      function handleMotion(event) {
+        if (!tracking) return;
+
+        const a = event.accelerationIncludingGravity;
+        if (!a || a.x == null || a.y == null || a.z == null) return;
+
+        const magnitude = Math.sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
+
+        // Slowly follow gravity / device orientation.
+        gravity = gravity * 0.92 + magnitude * 0.08;
+
+        const movement = Math.abs(magnitude - gravity);
+        smoothed = smoothed * 0.72 + movement * 0.28;
+
+        const now = performance.now();
+
+        if (smoothed > STEP_THRESHOLD && !aboveThreshold) {
+          aboveThreshold = true;
+
+          if (now - lastStepAt >= MIN_STEP_INTERVAL) {
+            lastStepAt = now;
+            addStep(1);
+          }
+        }
+
+        if (smoothed < STEP_THRESHOLD * 0.55) {
+          aboveThreshold = false;
+        }
+      }
+
+      async function startTracking() {
+        try {
+          if (
+            typeof DeviceMotionEvent !== "undefined" &&
+            typeof DeviceMotionEvent.requestPermission === "function"
+          ) {
+            const result = await DeviceMotionEvent.requestPermission();
+            if (result !== "granted") {
+              setStatus("Motion access was not allowed. You can still use the +1 test button.");
+              return;
+            }
+          }
+
+          if (!("DeviceMotionEvent" in window)) {
+            setStatus("This browser does not expose motion data. Try it on your phone.");
+            return;
+          }
+
+          if (!tracking) {
+            window.addEventListener("devicemotion", handleMotion, { passive: true });
+            tracking = true;
+          }
+
+          els.startButton.textContent = "✓ Tracking";
+          els.startButton.disabled = true;
+          setStatus("Tracking is on. Put the phone in your pocket and start walking. 🥚");
+        } catch (err) {
+          console.error(err);
+          setStatus("Could not start motion tracking. Make sure the page is opened over HTTPS.");
+        }
+      }
+
+      function compressPhoto(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+
+          reader.onload = () => {
+            const img = new Image();
+
+            img.onload = () => {
+              const size = 640;
+              const canvas = document.createElement("canvas");
+              canvas.width = size;
+              canvas.height = size;
+
+              const ctx = canvas.getContext("2d");
+              const scale = Math.max(size / img.width, size / img.height);
+              const drawW = img.width * scale;
+              const drawH = img.height * scale;
+              const x = (size - drawW) / 2;
+              const y = (size - drawH) / 2;
+
+              ctx.drawImage(img, x, y, drawW, drawH);
+              resolve(canvas.toDataURL("image/jpeg", 0.78));
+            };
+
+            img.onerror = reject;
+            img.src = reader.result;
+          };
+
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+
+      els.photoInput.addEventListener("change", async () => {
+        const file = els.photoInput.files && els.photoInput.files[0];
+        if (!file) return;
+
+        try {
+          setStatus("Saving your profile photo…");
+          state.photo = await compressPhoto(file);
+          saveState();
+          renderPhoto();
+          setStatus("Photo saved on this phone. 📸");
+        } catch (err) {
+          console.error(err);
+          setStatus("I couldn't save that photo. Try another one.");
+        } finally {
+          els.photoInput.value = "";
+        }
+      });
+
+      els.startButton.addEventListener("click", startTracking);
+      els.testButton.addEventListener("click", () => addStep(1));
+
+      els.resetButton.addEventListener("click", () => {
+        if (!confirm("Reset today's steps and eggs to zero?")) return;
+        state.steps = 0;
+        saveState();
+        renderCounters();
+        renderEggsFull();
+        setStatus("Today's eggs have been reset.");
+      });
+
+      els.today.textContent = prettyDate();
+      renderPhoto();
+      renderCounters();
+      renderEggsFull();
+      saveState();
+    })();
+  </script>
+</body>
+</html>
