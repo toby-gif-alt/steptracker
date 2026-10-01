@@ -1,0 +1,19 @@
+{
+  "name": "Step Tracker",
+  "short_name": "Step Tracker",
+  "description": "A simple step tracker that gives you an egg for every step.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fff8dc",
+  "theme_color": "#fff8dc",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}
